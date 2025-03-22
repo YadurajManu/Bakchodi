@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewsWeather</title>
+    <title>GyaniYadu - Indian News & Weather</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>NewsWeather</h1>
+            <h1>GyaniYadu</h1>
+            <div class="tagline">India's Minimalist News Portal</div>
             <div class="weather-widget" id="weather-widget">
                 <div class="weather-info">
                     <span id="location">Loading location...</span>
@@ -32,16 +34,26 @@
                 <button class="category-btn active" data-category="general">General</button>
                 <button class="category-btn" data-category="business">Business</button>
                 <button class="category-btn" data-category="technology">Technology</button>
+                <button class="category-btn" data-category="entertainment">Entertainment</button>
+                <button class="category-btn" data-category="sports">Sports</button>
                 <button class="category-btn" data-category="science">Science</button>
                 <button class="category-btn" data-category="health">Health</button>
             </div>
             <div class="source-filters">
                 <select id="source-select">
-                    <option value="newsapi">NewsAPI</option>
-                    <option value="guardian">The Guardian</option>
+                    <option value="newsapi">Global News</option>
                     <option value="newsdata">NewsData.io</option>
+                    <option value="guardian">The Guardian</option>
                 </select>
+                <div class="india-toggle">
+                    <input type="checkbox" id="india-only" checked>
+                    <label for="india-only">India News Only</label>
+                </div>
             </div>
+        </section>
+
+        <section class="featured-news" id="featured-news">
+            <!-- Featured news will be loaded here -->
         </section>
 
         <section class="news-container" id="news-container">
@@ -52,12 +64,36 @@
 
     <footer>
         <div class="container">
-            <p>© 2024 NewsWeather. Powered by NewsAPI, The Guardian, NewsData.io, and OpenWeatherMap.</p>
-            <p>Created for demonstration purposes only.</p>
+            <div class="footer-content">
+                <div class="footer-about">
+                    <h3>About GyaniYadu</h3>
+                    <p>GyaniYadu provides minimalist news and weather information for India. Stay informed with the latest updates from across the nation.</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#" id="about-link">About</a></li>
+                        <li><a href="#" id="privacy-link">Privacy Policy</a></li>
+                        <li><a href="#" id="contact-link">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 GyaniYadu. Powered by NewsAPI, The Guardian, NewsData.io, and OpenWeatherMap.</p>
+                <p>Created for demonstration purposes only.</p>
+            </div>
         </div>
     </footer>
 
-    <!-- CORS helper script (uncomment if needed) -->
+    <!-- Modal for about/privacy/contact -->
+    <div class="modal" id="info-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- CORS helper script -->
     <script src="cors.js"></script>
     <script src="script.js"></script>
 </body>

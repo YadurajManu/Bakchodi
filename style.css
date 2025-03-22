@@ -2,12 +2,14 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
 }
 
 :root {
     --primary-color: #000;
     --secondary-color: #333;
+    --accent-color: #FF9933; /* Saffron from Indian flag */
+    --accent-color-2: #138808; /* Green from Indian flag */
     --background-color: #fff;
     --border-color: #ddd;
     --hover-color: #f5f5f5;
@@ -37,12 +39,32 @@ header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 header h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     letter-spacing: 1px;
+    position: relative;
+    display: inline-block;
+}
+
+header h1::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50%;
+    height: 3px;
+    background: linear-gradient(to right, var(--accent-color), var(--accent-color-2));
+}
+
+.tagline {
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: -5px;
+    margin-left: 5px;
 }
 
 /* Weather Widget */
@@ -50,6 +72,10 @@ header h1 {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-left: auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .weather-info {
@@ -88,6 +114,7 @@ header h1 {
     border: 1px solid var(--border-color);
     border-right: none;
     outline: none;
+    border-radius: 4px 0 0 4px;
 }
 
 .search-container button {
@@ -96,6 +123,12 @@ header h1 {
     color: white;
     border: none;
     cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    transition: background-color 0.3s;
+}
+
+.search-container button:hover {
+    background-color: var(--accent-color);
 }
 
 .category-filters {
@@ -110,6 +143,7 @@ header h1 {
     border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.3s ease;
+    border-radius: 4px;
 }
 
 .category-btn:hover {
@@ -121,11 +155,112 @@ header h1 {
     color: white;
 }
 
+.source-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 #source-select {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-color);
     outline: none;
+    border-radius: 4px;
+}
+
+.india-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.india-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Featured News */
+.featured-news {
+    margin: 20px 0 30px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 30px;
+}
+
+@media (min-width: 768px) {
+    .featured-news {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.featured-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 300px;
+    display: flex;
+    align-items: flex-end;
+    background-size: cover;
+    background-position: center;
+}
+
+.featured-card::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    z-index: 1;
+}
+
+.featured-content {
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+    color: white;
+}
+
+.featured-source {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.featured-title {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.featured-description {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.featured-link {
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    border-bottom: 1px solid white;
+    padding-bottom: 2px;
+    transition: opacity 0.3s;
+}
+
+.featured-link:hover {
+    opacity: 0.8;
 }
 
 /* News Container */
@@ -152,6 +287,7 @@ header h1 {
     border: 1px solid var(--border-color);
     overflow: hidden;
     transition: transform 0.3s ease;
+    border-radius: 8px;
 }
 
 .news-card:hover {
@@ -176,6 +312,16 @@ header h1 {
     margin-bottom: 5px;
 }
 
+.news-india-tag {
+    display: inline-block;
+    background-color: var(--accent-color-2);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+
 .news-title {
     font-size: 1.1rem;
     margin-bottom: 10px;
@@ -195,6 +341,11 @@ header h1 {
     font-weight: 500;
     border-bottom: 1px solid var(--primary-color);
     padding-bottom: 2px;
+    transition: color 0.3s;
+}
+
+.news-link:hover {
+    color: var(--accent-color);
 }
 
 .loading {
@@ -205,15 +356,124 @@ header h1 {
     color: var(--secondary-color);
 }
 
+.error, .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px;
+    color: var(--secondary-color);
+    border: 1px dashed var(--border-color);
+    border-radius: 5px;
+}
+
 /* Footer */
 footer {
     background-color: var(--primary-color);
     color: var(--background-color);
-    padding: 20px 0;
+    padding: 40px 0 20px;
     margin-top: 40px;
 }
 
-footer p {
+.footer-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+@media (min-width: 768px) {
+    .footer-content {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+.footer-about h3, .footer-links h3 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    position: relative;
+    display: inline-block;
+}
+
+.footer-about h3::after, .footer-links h3::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background-color: var(--accent-color);
+}
+
+.footer-about p {
     font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.footer-links ul {
+    list-style: none;
+}
+
+.footer-links ul li {
+    margin-bottom: 8px;
+}
+
+.footer-links ul li a {
+    color: var(--background-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.footer-links ul li a:hover {
+    color: var(--accent-color);
+}
+
+.footer-bottom {
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-bottom: 5px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#modal-content h2 {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
 } 
