@@ -1,5 +1,5 @@
 /**
- * NewsWeather - Main JavaScript
+ * GyaniYadu - India's Minimalist News & Weather Portal
  * 
  * Note on CORS issues:
  * If you encounter CORS errors when fetching from the APIs, try these solutions:
@@ -23,26 +23,36 @@ const WEATHER_API_BASE_URL = "https://api.openweathermap.org/data/2.5";
 
 // DOM Elements
 const newsContainer = document.getElementById('news-container');
+const featuredNewsContainer = document.getElementById('featured-news');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const categoryButtons = document.querySelectorAll('.category-btn');
 const sourceSelect = document.getElementById('source-select');
+const indiaOnlyCheckbox = document.getElementById('india-only');
 const locationElement = document.getElementById('location');
 const temperatureElement = document.getElementById('temperature');
 const weatherIconElement = document.getElementById('weather-icon');
+const modal = document.getElementById('info-modal');
+const modalContent = document.getElementById('modal-content');
+const closeModal = document.querySelector('.close-modal');
+const aboutLink = document.getElementById('about-link');
+const privacyLink = document.getElementById('privacy-link');
+const contactLink = document.getElementById('contact-link');
 
 // Default Parameters
 let currentCategory = 'general';
 let currentSource = 'newsapi';
 let currentSearchQuery = '';
-let weatherCity = 'London'; // Default city
+let indiaNewsOnly = true;
+let weatherCity = 'New Delhi'; // Default city for India
+let featuredArticles = [];
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     // Initial news fetch
     fetchNews();
     
-    // Get user's location for weather
+    // Get user's location for weather, defaulting to India if not available
     getUserLocation();
     
     // Event listeners
@@ -61,6 +71,37 @@ document.addEventListener('DOMContentLoaded', () => {
     sourceSelect.addEventListener('change', () => {
         currentSource = sourceSelect.value;
         fetchNews();
+    });
+    
+    indiaOnlyCheckbox.addEventListener('change', () => {
+        indiaNewsOnly = indiaOnlyCheckbox.checked;
+        fetchNews();
+    });
+    
+    // Modal event listeners
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    aboutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showModal('about');
+    });
+    
+    privacyLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showModal('privacy');
+    });
+    
+    contactLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showModal('contact');
     });
 });
 
@@ -82,10 +123,52 @@ function handleSearch() {
     fetchNews();
 }
 
+// Show modal content
+function showModal(type) {
+    let content = '';
+    
+    if (type === 'about') {
+        content = `
+            <h2>About GyaniYadu</h2>
+            <p>GyaniYadu is a minimalist news and weather portal focused on delivering the latest news from India and around the world.</p>
+            <p>Our mission is to provide a clean, distraction-free reading experience while keeping you informed about current events and weather conditions.</p>
+            <p>The name "GyaniYadu" combines "Gyani" (knowledgeable) with "Yadu" (information), representing our goal to deliver knowledge and information in a simple format.</p>
+            <h3>Our Sources</h3>
+            <p>We aggregate news from multiple trusted sources including NewsAPI, The Guardian, and NewsData.io to give you a comprehensive view of what's happening in India and globally.</p>
+        `;
+    } else if (type === 'privacy') {
+        content = `
+            <h2>Privacy Policy</h2>
+            <p>GyaniYadu respects your privacy and is committed to protecting your personal data.</p>
+            <h3>Data Collection</h3>
+            <p>We collect your location data only to provide you with relevant weather information. This data is not stored or shared with third parties.</p>
+            <h3>Cookies</h3>
+            <p>GyaniYadu does not use cookies to track your browsing behavior.</p>
+            <h3>Third-Party Services</h3>
+            <p>We use third-party APIs for news and weather data. Please refer to their respective privacy policies for information on how they handle data.</p>
+        `;
+    } else if (type === 'contact') {
+        content = `
+            <h2>Contact Us</h2>
+            <p>We'd love to hear from you! You can reach us through the following channels:</p>
+            <ul style="list-style: none; padding: 0;">
+                <li><strong>Email:</strong> contact@gyaniyadu.com</li>
+                <li><strong>Phone:</strong> +91 9876543210</li>
+                <li><strong>Address:</strong> 123 Digital Street, Tech Hub, Bangalore - 560001, India</li>
+            </ul>
+            <p>For feedback, suggestions, or technical support, please email us at support@gyaniyadu.com</p>
+        `;
+    }
+    
+    modalContent.innerHTML = content;
+    modal.style.display = 'block';
+}
+
 // Fetch news based on current parameters
 async function fetchNews() {
     // Show loading
     newsContainer.innerHTML = '<div class="loading">Loading news...</div>';
+    featuredNewsContainer.innerHTML = '';
     
     try {
         let articles = [];
@@ -98,10 +181,94 @@ async function fetchNews() {
             articles = await fetchNewsDataAPI();
         }
         
-        displayNews(articles);
+        // Filter for India news if the checkbox is checked
+        if (indiaNewsOnly) {
+            articles = filterIndiaNews(articles);
+        }
+        
+        // If no articles found, try a different source
+        if (articles.length === 0) {
+            // Try a fallback source if first one fails
+            console.log(`No articles found from ${currentSource}, trying fallback sources...`);
+            
+            if (currentSource !== 'newsdata') {
+                console.log('Trying NewsData.io as fallback...');
+                articles = await fetchNewsDataAPI();
+                
+                if (indiaNewsOnly) {
+                    articles = filterIndiaNews(articles);
+                }
+            }
+            
+            // If still no articles, try without India filter
+            if (articles.length === 0 && indiaNewsOnly) {
+                console.log('No India-specific articles found, showing all news...');
+                indiaNewsOnly = false;
+                
+                if (currentSource === 'newsapi') {
+                    articles = await fetchNewsAPI();
+                } else if (currentSource === 'guardian') {
+                    articles = await fetchGuardianAPI();
+                } else if (currentSource === 'newsdata') {
+                    articles = await fetchNewsDataAPI();
+                }
+                
+                // Restore the filter setting after this fetch
+                indiaNewsOnly = true;
+            }
+        }
+        
+        // Get featured articles
+        featuredArticles = selectFeaturedArticles(articles);
+        
+        // Remove featured articles from main list
+        const featuredIds = featuredArticles.map(article => article.url);
+        const mainArticles = articles.filter(article => !featuredIds.includes(article.url));
+        
+        displayFeaturedNews(featuredArticles);
+        displayNews(mainArticles);
     } catch (error) {
         console.error('Error fetching news:', error);
-        newsContainer.innerHTML = `<div class="error">Error loading news. Please try again later.</div>`;
+        newsContainer.innerHTML = `<div class="error">Error loading news: ${error.message}. Please try a different source or check your connection.</div>`;
+        featuredNewsContainer.innerHTML = '';
+    }
+}
+
+// Filter for India-related news
+function filterIndiaNews(articles) {
+    const indiaKeywords = ['india', 'indian', 'delhi', 'mumbai', 'bangalore', 'kolkata', 'chennai', 'hyderabad', 
+                          'ahmedabad', 'pune', 'modi', 'bjp', 'congress', 'maharashtra', 'uttar pradesh', 
+                          'gujarat', 'tamil nadu', 'karnataka', 'kerala'];
+    
+    return articles.filter(article => {
+        const title = article.title.toLowerCase();
+        const description = article.description.toLowerCase();
+        
+        return indiaKeywords.some(keyword => 
+            title.includes(keyword) || description.includes(keyword)
+        );
+    }).map(article => {
+        // Add isIndiaNews flag
+        return {
+            ...article,
+            isIndiaNews: true
+        };
+    });
+}
+
+// Select featured articles
+function selectFeaturedArticles(articles) {
+    if (articles.length < 2) return [];
+    
+    // Prioritize articles with images
+    const articlesWithImages = articles.filter(article => 
+        article.imageUrl && !article.imageUrl.includes('placeholder')
+    );
+    
+    if (articlesWithImages.length >= 2) {
+        return articlesWithImages.slice(0, 2);
+    } else {
+        return articles.slice(0, 2);
     }
 }
 
@@ -109,11 +276,23 @@ async function fetchNews() {
 async function fetchNewsAPI() {
     let url = `${NEWS_API_BASE_URL}/top-headlines?apiKey=${NEWS_API_KEY}&category=${currentCategory}`;
     
-    if (currentSearchQuery) {
-        url = `${NEWS_API_BASE_URL}/everything?apiKey=${NEWS_API_KEY}&q=${currentSearchQuery}`;
+    // Add country=in parameter if India-only is checked
+    if (indiaNewsOnly) {
+        url += '&country=in';
     }
     
-    const response = await fetch(url);
+    if (currentSearchQuery) {
+        // Properly encode search query
+        const encodedQuery = encodeURIComponent(currentSearchQuery);
+        url = `${NEWS_API_BASE_URL}/everything?apiKey=${NEWS_API_KEY}&q=${encodedQuery}`;
+        
+        // Add India to search query if India-only is checked
+        if (indiaNewsOnly) {
+            url += `%20AND%20${encodeURIComponent('India')}`;
+        }
+    }
+    
+    const response = await fetchWithCorsProxy(url);
     const data = await response.json();
     
     if (data.status !== 'ok') {
@@ -126,19 +305,35 @@ async function fetchNewsAPI() {
         description: article.description || 'No description available',
         url: article.url,
         imageUrl: article.urlToImage || 'https://via.placeholder.com/300x200?text=No+Image',
-        publishedAt: new Date(article.publishedAt).toLocaleDateString()
+        publishedAt: new Date(article.publishedAt).toLocaleDateString(),
+        isIndiaNews: article.source.name?.toLowerCase().includes('india') || false
     }));
 }
 
 // Fetch from Guardian API
 async function fetchGuardianAPI() {
-    let url = `${GUARDIAN_BASE_URL}/search?api-key=${GUARDIAN_API_KEY}&section=${currentCategory === 'general' ? 'news' : currentCategory}`;
+    let url = `${GUARDIAN_BASE_URL}/search?api-key=${GUARDIAN_API_KEY}`;
     
-    if (currentSearchQuery) {
-        url = `${GUARDIAN_BASE_URL}/search?api-key=${GUARDIAN_API_KEY}&q=${currentSearchQuery}`;
+    if (currentCategory !== 'general') {
+        url += `&section=${encodeURIComponent(currentCategory)}`;
     }
     
-    const response = await fetch(url);
+    if (indiaNewsOnly) {
+        url += `&q=${encodeURIComponent('India')}`;
+    }
+    
+    if (currentSearchQuery) {
+        // Properly encode search query
+        const encodedQuery = encodeURIComponent(currentSearchQuery);
+        url = `${GUARDIAN_BASE_URL}/search?api-key=${GUARDIAN_API_KEY}&q=${encodedQuery}`;
+        
+        // Add India to search query if India-only is checked
+        if (indiaNewsOnly) {
+            url += `+${encodeURIComponent('India')}`;
+        }
+    }
+    
+    const response = await fetchWithCorsProxy(url);
     const data = await response.json();
     
     if (!data.response) {
@@ -151,7 +346,8 @@ async function fetchGuardianAPI() {
         description: article.fields?.trailText || 'No description available',
         url: article.webUrl,
         imageUrl: article.fields?.thumbnail || 'https://via.placeholder.com/300x200?text=No+Image',
-        publishedAt: new Date(article.webPublicationDate).toLocaleDateString()
+        publishedAt: new Date(article.webPublicationDate).toLocaleDateString(),
+        isIndiaNews: article.sectionName?.toLowerCase().includes('india') || false
     }));
 }
 
@@ -159,11 +355,22 @@ async function fetchGuardianAPI() {
 async function fetchNewsDataAPI() {
     let url = `${NEWSDATA_BASE_URL}/news?apikey=${NEWSDATA_API_KEY}&category=${currentCategory}`;
     
-    if (currentSearchQuery) {
-        url = `${NEWSDATA_BASE_URL}/news?apikey=${NEWSDATA_API_KEY}&q=${currentSearchQuery}`;
+    if (indiaNewsOnly) {
+        url += '&country=in';
     }
     
-    const response = await fetch(url);
+    if (currentSearchQuery) {
+        // Properly encode search query
+        const encodedQuery = encodeURIComponent(currentSearchQuery);
+        url = `${NEWSDATA_BASE_URL}/news?apikey=${NEWSDATA_API_KEY}&q=${encodedQuery}`;
+        
+        // Add India to search query if India-only is checked
+        if (indiaNewsOnly) {
+            url += `+${encodeURIComponent('India')}`;
+        }
+    }
+    
+    const response = await fetchWithCorsProxy(url);
     const data = await response.json();
     
     if (data.status !== 'success') {
@@ -176,8 +383,30 @@ async function fetchNewsDataAPI() {
         description: article.description || 'No description available',
         url: article.link,
         imageUrl: article.image_url || 'https://via.placeholder.com/300x200?text=No+Image',
-        publishedAt: new Date(article.pubDate).toLocaleDateString()
+        publishedAt: new Date(article.pubDate).toLocaleDateString(),
+        isIndiaNews: article.country?.includes('india') || false
     }));
+}
+
+// Display featured news
+function displayFeaturedNews(articles) {
+    if (articles.length === 0) {
+        featuredNewsContainer.style.display = 'none';
+        return;
+    }
+    
+    featuredNewsContainer.style.display = 'grid';
+    
+    featuredNewsContainer.innerHTML = articles.map(article => `
+        <div class="featured-card" style="background-image: url('${article.imageUrl}')">
+            <div class="featured-content">
+                <span class="featured-source">${article.source}</span>
+                <h2 class="featured-title">${article.title}</h2>
+                <p class="featured-description">${article.description.substring(0, 100)}${article.description.length > 100 ? '...' : ''}</p>
+                <a href="${article.url}" class="featured-link" target="_blank">Read more</a>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Display news articles
@@ -191,9 +420,12 @@ function displayNews(articles) {
         <div class="news-card">
             <img class="news-image" src="${article.imageUrl}" alt="${article.title}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
             <div class="news-content">
-                <span class="news-source">${article.source} • ${article.publishedAt}</span>
+                <div>
+                    <span class="news-source">${article.source} • ${article.publishedAt}</span>
+                    ${article.isIndiaNews ? '<span class="news-india-tag">India</span>' : ''}
+                </div>
                 <h3 class="news-title">${article.title}</h3>
-                <p class="news-description">${article.description}</p>
+                <p class="news-description">${article.description.substring(0, 120)}${article.description.length > 120 ? '...' : ''}</p>
                 <a href="${article.url}" class="news-link" target="_blank">Read more</a>
             </div>
         </div>
@@ -221,7 +453,7 @@ function getUserLocation() {
 async function fetchWeatherByCoords(lat, lon) {
     try {
         const url = `${WEATHER_API_BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`;
-        const response = await fetch(url);
+        const response = await fetchWithCorsProxy(url);
         const data = await response.json();
         
         if (data.cod === 200) {
@@ -232,6 +464,9 @@ async function fetchWeatherByCoords(lat, lon) {
     } catch (error) {
         console.error('Error fetching weather:', error);
         locationElement.textContent = 'Weather unavailable';
+        
+        // Fallback to default city for India
+        fetchWeatherByCity(weatherCity);
     }
 }
 
@@ -239,7 +474,7 @@ async function fetchWeatherByCoords(lat, lon) {
 async function fetchWeatherByCity(city) {
     try {
         const url = `${WEATHER_API_BASE_URL}/weather?q=${city}&units=metric&appid=${WEATHER_API_KEY}`;
-        const response = await fetch(url);
+        const response = await fetchWithCorsProxy(url);
         const data = await response.json();
         
         if (data.cod === 200) {

@@ -1,8 +1,9 @@
 /**
- * CORS Proxy Helper
+ * GyaniYadu - CORS Proxy Helper
  * 
  * This file contains functions to help deal with CORS issues when making API requests.
- * If you're experiencing CORS errors, you can modify the script.js file to use these functions.
+ * If you're experiencing CORS errors when fetching news or weather information for India,
+ * you can modify the script.js file to use these helper functions.
  */
 
 // List of CORS proxy servers
@@ -60,13 +61,21 @@ async function fetchWithCorsProxy(url, options = {}) {
 /**
  * How to use in script.js:
  * 
- * 1. First import this file in index.html:
+ * To handle CORS for India-specific news APIs and weather data:
+ * 
+ * 1. First ensure this file is properly imported in index.html:
  *    <script src="cors.js"></script>
  * 
- * 2. Then replace fetch calls with fetchWithCorsProxy:
+ * 2. Then modify the fetch calls in script.js:
+ *    
  *    Instead of:
  *    const response = await fetch(url);
  * 
  *    Use:
  *    const response = await fetchWithCorsProxy(url);
+ * 
+ * 3. Apply this to all API calls (NewsAPI, Guardian, NewsData.io, OpenWeatherMap)
+ *    
+ * Note: For even better performance in India, consider setting up a dedicated 
+ * CORS proxy server in an Indian data center.
  */ 
