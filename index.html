@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsWeather</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>NewsWeather</h1>
+            <div class="weather-widget" id="weather-widget">
+                <div class="weather-info">
+                    <span id="location">Loading location...</span>
+                    <span id="temperature">--°C</span>
+                </div>
+                <div class="weather-icon">
+                    <img id="weather-icon" src="" alt="Weather icon">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="news-filters">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search news...">
+                <button id="search-button">Search</button>
+            </div>
+            <div class="category-filters">
+                <button class="category-btn active" data-category="general">General</button>
+                <button class="category-btn" data-category="business">Business</button>
+                <button class="category-btn" data-category="technology">Technology</button>
+                <button class="category-btn" data-category="science">Science</button>
+                <button class="category-btn" data-category="health">Health</button>
+            </div>
+            <div class="source-filters">
+                <select id="source-select">
+                    <option value="newsapi">NewsAPI</option>
+                    <option value="guardian">The Guardian</option>
+                    <option value="newsdata">NewsData.io</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="news-container" id="news-container">
+            <!-- News articles will be loaded here -->
+            <div class="loading">Loading news...</div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 NewsWeather. Powered by NewsAPI, The Guardian, NewsData.io, and OpenWeatherMap.</p>
+            <p>Created for demonstration purposes only.</p>
+        </div>
+    </footer>
+
+    <!-- CORS helper script (uncomment if needed) -->
+    <script src="cors.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
