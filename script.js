@@ -49,6 +49,9 @@ let featuredArticles = [];
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
+    // Add console log to help debug
+    console.log('GyaniYadu initializing...');
+    
     // Initial news fetch
     fetchNews();
     
@@ -164,6 +167,39 @@ function showModal(type) {
     modal.style.display = 'block';
 }
 
+// Attempt to fetch news from multiple sources if primary source fails
+async function attemptMultipleSources() {
+    const sources = ['newsapi', 'newsdata', 'guardian'];
+    let articles = [];
+    let errors = [];
+    
+    // Try each source until we get articles
+    for (const source of sources) {
+        try {
+            console.log(`Attempting to fetch from ${source}...`);
+            
+            if (source === 'newsapi') {
+                articles = await fetchNewsAPI();
+            } else if (source === 'guardian') {
+                articles = await fetchGuardianAPI();
+            } else if (source === 'newsdata') {
+                articles = await fetchNewsDataAPI();
+            }
+            
+            if (articles.length > 0) {
+                console.log(`Successfully fetched ${articles.length} articles from ${source}`);
+                return articles;
+            }
+        } catch (error) {
+            console.error(`Error fetching from ${source}:`, error);
+            errors.push(`${source}: ${error.message}`);
+        }
+    }
+    
+    // If we get here, all sources failed
+    throw new Error(`All news sources failed: ${errors.join(', ')}`);
+}
+
 // Fetch news based on current parameters
 async function fetchNews() {
     // Show loading
@@ -173,49 +209,56 @@ async function fetchNews() {
     try {
         let articles = [];
         
-        if (currentSource === 'newsapi') {
-            articles = await fetchNewsAPI();
-        } else if (currentSource === 'guardian') {
-            articles = await fetchGuardianAPI();
-        } else if (currentSource === 'newsdata') {
-            articles = await fetchNewsDataAPI();
+        try {
+            // First try the selected source
+            if (currentSource === 'newsapi') {
+                articles = await fetchNewsAPI();
+            } else if (currentSource === 'guardian') {
+                articles = await fetchGuardianAPI();
+            } else if (currentSource === 'newsdata') {
+                articles = await fetchNewsDataAPI();
+            }
+        } catch (error) {
+            console.error(`Error with primary source ${currentSource}:`, error);
+            
+            // Check if it's likely a CORS issue
+            if (error.message.includes('CORS') || error.message.includes('blocked') || error.message.includes('Origin')) {
+                const corsMessage = `
+                    <div class="error">
+                        <h3>CORS Error Detected</h3>
+                        <p>We're having trouble accessing news data due to Cross-Origin Resource Sharing (CORS) restrictions.</p>
+                        <p>To fix this issue:</p>
+                        <ol>
+                            <li>Run this website on a local server (see README.md)</li>
+                            <li>Install a CORS browser extension</li>
+                            <li>Try a different news source</li>
+                        </ol>
+                    </div>
+                `;
+                newsContainer.innerHTML = corsMessage;
+                featuredNewsContainer.innerHTML = '';
+                return;
+            }
+            
+            // If the selected source fails, try all sources
+            articles = await attemptMultipleSources();
         }
         
         // Filter for India news if the checkbox is checked
         if (indiaNewsOnly) {
-            articles = filterIndiaNews(articles);
+            const filteredArticles = filterIndiaNews(articles);
+            
+            // Only use filtered if we got results, otherwise fall back to all articles
+            if (filteredArticles.length > 0) {
+                articles = filteredArticles;
+            } else {
+                console.log('No India-specific news found, showing all news');
+            }
         }
         
-        // If no articles found, try a different source
+        // If still no articles, show error
         if (articles.length === 0) {
-            // Try a fallback source if first one fails
-            console.log(`No articles found from ${currentSource}, trying fallback sources...`);
-            
-            if (currentSource !== 'newsdata') {
-                console.log('Trying NewsData.io as fallback...');
-                articles = await fetchNewsDataAPI();
-                
-                if (indiaNewsOnly) {
-                    articles = filterIndiaNews(articles);
-                }
-            }
-            
-            // If still no articles, try without India filter
-            if (articles.length === 0 && indiaNewsOnly) {
-                console.log('No India-specific articles found, showing all news...');
-                indiaNewsOnly = false;
-                
-                if (currentSource === 'newsapi') {
-                    articles = await fetchNewsAPI();
-                } else if (currentSource === 'guardian') {
-                    articles = await fetchGuardianAPI();
-                } else if (currentSource === 'newsdata') {
-                    articles = await fetchNewsDataAPI();
-                }
-                
-                // Restore the filter setting after this fetch
-                indiaNewsOnly = true;
-            }
+            throw new Error('No articles found. Try different search criteria or news source.');
         }
         
         // Get featured articles
@@ -229,7 +272,31 @@ async function fetchNews() {
         displayNews(mainArticles);
     } catch (error) {
         console.error('Error fetching news:', error);
-        newsContainer.innerHTML = `<div class="error">Error loading news: ${error.message}. Please try a different source or check your connection.</div>`;
+        
+        // Provide more detailed error messages for common problems
+        let errorMessage = error.message;
+        
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error. Please check your internet connection and try again.';
+        } else if (error.message.includes('api key')) {
+            errorMessage = 'API key error. The news service API key may be invalid or have reached its limit.';
+        } else if (error.message.includes('429')) {
+            errorMessage = 'Too many requests. The news API rate limit has been reached. Try again later.';
+        }
+        
+        newsContainer.innerHTML = `
+            <div class="error">
+                <h3>Error Loading News</h3>
+                <p>${errorMessage}</p>
+                <p>Suggestions:</p>
+                <ul>
+                    <li>Try a different news source</li>
+                    <li>Check your internet connection</li>
+                    <li>Reload the page</li>
+                    <li>Try disabling "India News Only" if it's currently enabled</li>
+                </ul>
+            </div>
+        `;
         featuredNewsContainer.innerHTML = '';
     }
 }

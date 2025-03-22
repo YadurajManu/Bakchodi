@@ -363,6 +363,27 @@ header h1::after {
     color: var(--secondary-color);
     border: 1px dashed var(--border-color);
     border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.error h3 {
+    margin-bottom: 15px;
+    color: #d32f2f;
+}
+
+.error p {
+    margin-bottom: 15px;
+}
+
+.error ul, .error ol {
+    text-align: left;
+    width: fit-content;
+    margin: 0 auto;
+    padding-left: 20px;
+}
+
+.error li {
+    margin-bottom: 8px;
 }
 
 /* Footer */
